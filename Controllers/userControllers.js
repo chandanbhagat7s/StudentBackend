@@ -67,11 +67,11 @@ exports.login = catchAsync(async (req, res, next) => {
 
 exports.signUp = catchAsync(async (req, res, next) => {
     console.log(req.body);
-    const { name, email, password, mobile } = req.body;
+    const { name, email, password, mobile, address } = req.body;
     if (password.length < 8) {
         return next(new appError("please enter password with atleast 8 character", 400))
     }
-    const newUser = await User.create({ name, email, password, mobile });
+    const newUser = await User.create({ name, email, password, mobile, address });
     if (!newUser) {
         return next(new appError("something went wrrong  ", 500));
 
