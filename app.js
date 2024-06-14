@@ -50,7 +50,7 @@ cloudinary.v2.config({
 });
 
 
-app.use("/", (req, res) => { res.status(200).send({ status: "working" }) })
+// app.use("/", (req, res) => { res.status(200).send({ status: "working" }) })
 app.use('/api/v1/auth', userRouter)
 app.use("/api/v1/admin", adminRouter)
 app.use("/api/v1/teacher", teacherRoute)
