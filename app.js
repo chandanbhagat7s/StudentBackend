@@ -38,7 +38,7 @@ mongoose.connect(process.env.DATABASE_URL, {
     .then((con) => {
         console.log("database connected");
     }).catch(e => {
-        console.log("not connected", e);
+        console.log("not connected");
     })
 
 
