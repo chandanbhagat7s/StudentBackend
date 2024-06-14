@@ -9,6 +9,7 @@ const adminRouter = require('./Routes/adminRoutes');
 const teacherRoute = require('./Routes/teacherRoutes');
 const appError = require('./utils/appError');
 
+const cloudinary = require('cloudinary');
 const app = express()
 env.config({ path: "./config.env" })
 
@@ -28,6 +29,14 @@ mongoose.connect(process.env.DATABASE_URL, {
     }).catch(e => {
         console.log("not connected", e);
     })
+
+
+//  for uploading files
+cloudinary.v2.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET
+});
 
 
 

@@ -114,6 +114,39 @@ exports.createTeacher = catchAsync(async (req, res, next) => {
 
 })
 
+exports.markTodayAsHoliday = catchAsync(async (req, ers, next) => {
+    const { date, reason } = req.body;
+    if (!date, reason) {
+        return next(new appError("please provide all the fields", 400));
+    }
+    const d = new Date()
+    if (d.getDate() > date) {
+        return next(new appError("you cannot mark holiday for past", 400));
+
+    }
+    let holidayObject = {
+        month: d.getMonth(),
+        date,
+        reason
+    }
+    const updatedholiday = await Batch.findByIdAndUpdate(req.user.teachersBranch, {
+        $push: { holidays: holidayObject }
+    }, {
+        new: true
+    })
+
+    if (!updatedholiday) {
+
+        return next(new appError("Holiday not marked please try again", 400));
+    }
+
+    res.status(200).send({
+        status: "success",
+        msg: "holiday marked on date "
+    })
+
+})
+
 
 
 

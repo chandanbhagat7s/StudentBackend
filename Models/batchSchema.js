@@ -28,6 +28,10 @@ const batchSchema = mongoose.Schema({
         ref: "user"
 
     },
+    holidays: {
+        type: [Object],
+
+    }
 
 
 })
