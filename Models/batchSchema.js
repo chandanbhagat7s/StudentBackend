@@ -14,10 +14,7 @@ const batchSchema = mongoose.Schema({
         type: Date,
         default: Date.now()
     },
-    startsOn: {
-        type: Date,
-        required: [true, "must provide batch name"]
-    },
+
     student: {
         type: [mongoose.mongo.ObjectId],
         ref: "user"

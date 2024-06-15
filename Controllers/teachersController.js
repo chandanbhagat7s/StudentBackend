@@ -62,14 +62,6 @@ exports.uploadImages = uploads.single('image')
 exports.markPresenty = catchAsync(async (req, res, next) => {
     const { status } = req.body;
 
-
-    // delete the file form server
-    fs.unlink(`public/user/${req.body.image}`, (err) => {
-
-        console.log('path/file.txt was deleted');
-    })
-
-
     // getting the details of holiday
 
 
@@ -83,6 +75,11 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
         return next(new appError("please provide all the details to mark presenty", 400))
     }
 
+    if (status.status !== "present" && status.status !== "absent") {
+        return next(new appError("teacher can be eiter present or absent not anything other", 400))
+
+    }
+
     let d = new Date()
     let today = {
         date: d.getDate(),
@@ -92,7 +89,7 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
         hour: d.getHours()
     }
 
-    let { holidays } = await Batch.findById(ofBranch).select("holidays")
+    let { holidays } = await Batch.findById(req.user.ofBranch).select("holidays")
     let isTodayHoliday = false;
     holidays.length > 0 && holidays.map((h) => {
         if (h.date == today.date && h.month == today.month) {
@@ -109,9 +106,9 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
 
 
 
-    // if (today.hour >= 12) {
-    //     return next(new appError("duration for marking presenty  is over you cannot mark it now  ", 400))
-    // }
+    if (today.hour >= 12) {
+        return next(new appError("duration for marking presenty  is over you cannot mark it now  ", 400))
+    }
     const result = await cloudinary.v2.uploader.upload(`public/user/${req.body.image}`, {
         folder: 'chordz', // Save files in a folder named 
         // width: 250,
@@ -127,7 +124,7 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
         todaysObj = {
             date: today.date,
             photo: result.secure_url,
-            status: status.status,
+            status: status.status || "present",
             halfDay: status.halfDay
 
         }
@@ -135,7 +132,7 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
         todaysObj = {
             date: today.date,
             photo: result.secure_url,
-            status: status.status,
+            status: status.status || "present",
 
         }
     }
@@ -171,6 +168,12 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
 
     let markedPresenty = await Presenty.findByIdAndUpdate(req?.user?.presentyData, presentyData, {
         new: true
+    })
+
+    // delete the file form server
+    fs.unlink(`public/user/${req.body.image}`, (err) => {
+
+        console.log('path/file.txt was deleted');
     })
 
     if (!markedPresenty) {
