@@ -9,7 +9,6 @@ const createTokenSendRes = (id, res, statusCode, data) => {
     let token = jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
         expiresIn: process.env.JWT_EXPIRIR_IN
     });
-    console.log("token is ", token);
     let cookieOptions = {
         expires: new Date(
             Date.now() + 90 * 24 * 60 * 60 * 1000
@@ -29,7 +28,9 @@ const createTokenSendRes = (id, res, statusCode, data) => {
 
     // we will set cookies 
     res.status(statusCode).json({
-        status: true,
+        status: "success",
+
+        msg: "logged in successfully ",
         data
 
     })
@@ -37,7 +38,7 @@ const createTokenSendRes = (id, res, statusCode, data) => {
 
 
 exports.login = catchAsync(async (req, res, next) => {
-    console.log(req);
+
     const { email, password } = req.body;
 
 
@@ -80,3 +81,20 @@ exports.signUp = catchAsync(async (req, res, next) => {
     newUser.password = undefined;
     createTokenSendRes(newUser._id, res, 201, newUser)
 });
+
+
+
+
+
+exports.logout = function (req, res) {
+    console.log("came");
+    res.cookie('jwt', 'logout', {
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    })
+
+    res.status(200).json({ status: 'success' })
+}
+
+
+

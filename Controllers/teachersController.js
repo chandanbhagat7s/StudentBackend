@@ -71,14 +71,14 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
     halfDay : true
     }
     */
-    if (!status?.status) {
-        return next(new appError("please provide all the details to mark presenty", 400))
-    }
+    // if (!status?.status) {
+    //     return next(new appError("please provide all the details to mark presenty", 400))
+    // }
 
-    if (status.status !== "present" && status.status !== "absent") {
-        return next(new appError("teacher can be eiter present or absent not anything other", 400))
+    // if (status.status !== "present" && status.status !== "absent") {
+    //     return next(new appError("teacher can be eiter present or absent not anything other", 400))
 
-    }
+    // }
 
     let d = new Date()
     let today = {
@@ -106,9 +106,9 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
 
 
 
-    if (today.hour >= 12) {
-        return next(new appError("duration for marking presenty  is over you cannot mark it now  ", 400))
-    }
+    // if (today.hour >= 12) {
+    //     return next(new appError("duration for marking presenty  is over you cannot mark it now  ", 400))
+    // }
     const result = await cloudinary.v2.uploader.upload(`public/user/${req.body.image}`, {
         folder: 'chordz', // Save files in a folder named 
         // width: 250,
@@ -124,7 +124,7 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
         todaysObj = {
             date: today.date,
             photo: result.secure_url,
-            status: status.status || "present",
+            status: status?.status || "present",
             halfDay: status.halfDay
 
         }
@@ -132,7 +132,7 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
         todaysObj = {
             date: today.date,
             photo: result.secure_url,
-            status: status.status || "present",
+            status: status?.status || "present",
 
         }
     }

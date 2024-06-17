@@ -6,7 +6,7 @@ const catchAsync = require("../utils/catchAsync");
 
 const multer = require("multer");
 const sharp = require("sharp");
-
+const fs = require('fs');
 
 const cloudinary = require('cloudinary');
 const Event = require("../Models/Events");
@@ -272,6 +272,15 @@ exports.todaysEvent = catchAsync(async (req, res, next) => {
         // console.log(obj);
         obj.length > 0 && obj.map(el => {
             media.push(el.secure_url)
+        })
+
+        obj.length > 0 && req.body.Images.map((el, i) => {
+            fs.unlink(`./public/images/${el}`, (err) => {
+                if (err) {
+                    console.log("err in del");
+                }
+                // console.log("Del");
+            })
         })
 
 
