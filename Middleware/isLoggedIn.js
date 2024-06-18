@@ -8,7 +8,7 @@ const { promisify } = require('util');
 exports.isLoggedIn = catchAsync(async (req, res, next) => {
     // bringin out the token from the reqst header
 
-    console.log("cookie is", req.cookies);
+    // console.log("header is", req.headers);
     let token;
     if (req?.headers?.authorization && req?.headers?.authorization?.startsWith('Bearer ')) {
         token = req.headers.authorization.split(' ')[1];

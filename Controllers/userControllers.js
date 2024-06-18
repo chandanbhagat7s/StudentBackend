@@ -31,7 +31,8 @@ const createTokenSendRes = (id, res, statusCode, data) => {
         status: "success",
 
         msg: "logged in successfully ",
-        data
+        data,
+        token
 
     })
 }

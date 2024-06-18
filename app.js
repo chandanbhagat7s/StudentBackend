@@ -18,12 +18,14 @@ const cookieParser = require('cookie-parser');
 
 
 const cloudinary = require('cloudinary');
+const studentRouter = require('./Routes/studentRoute');
 const app = express()
 env.config({ path: "./config.env" })
 
 
 
 
+app.use(cookieParser())
 app.use(express.json())
 app.use(morgan("dev"))
 app.use(compression())
@@ -40,7 +42,6 @@ const PORT = process.env.PORT || 3000;
 console.log(PORT);
 
 app.use(cors(corsOptions))
-app.use(cookieParser())
 
 mongoose.connect(process.env.DATABASE_URL, {
 
@@ -64,7 +65,15 @@ cloudinary.v2.config({
 app.use('/api/v1/auth', userRouter)
 app.use("/api/v1/admin", adminRouter)
 app.use("/api/v1/teacher", teacherRoute)
-app.use("/api/v1/student", teacherRoute)
+app.use("/api/v1/student", studentRouter)
+
+app.use("*", (req, res) => {
+    res.status(404).send({
+        status: "error",
+        msg: "please hit valid url"
+    })
+})
+
 
 app.all("*", (req, res, next) => {
     return next(new appError("requested url not found please try to hit valid url", 400))

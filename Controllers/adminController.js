@@ -10,6 +10,8 @@ const fs = require('fs');
 
 const cloudinary = require('cloudinary');
 const Event = require("../Models/Events");
+const Course = require("../Models/Course");
+const Homework = require("../Models/Homework");
 
 
 
@@ -28,6 +30,36 @@ const multerFilter = (req, file, cb) => {
 
     }
 }
+
+exports.resizeHomeworkFiles = catchAsync(async (req, res, next) => {
+    console.log(req.body);
+    console.log("file is ", req.files);
+    if (req?.files?.length > 0 && !req.files.Files) {
+        return next(new appError("please upload a file", 400))
+    }
+
+
+
+
+    // images
+    req.body.Files = []
+    if (req.files.Files.length > 0) {
+        let obj = req.files.Files.map((el, i) => {
+            const ext = el;
+            const fileName = `${req?.body?.evenName || "homework"}-${Date.now()}-${i}.${ext}`
+            req.body.Files.push(fileName);
+            return sharp(el.buffer).toFile(`./public/homework/${fileName}`)
+        })
+        await Promise.all(obj)
+
+    }
+
+
+    next()
+})
+
+
+
 
 exports.resizeEventImage = catchAsync(async (req, res, next) => {
     console.log(req.body);
@@ -59,19 +91,30 @@ exports.resizeEventImage = catchAsync(async (req, res, next) => {
 
 
 // destination(for saving files) of multer package 
-const uploads = multer(
+const uploadsEvents = multer(
     {
         storage: multerStorage,
         fileFilter: multerFilter
+    }
+)
+const uploadshomework = multer(
+    {
+        storage: multerStorage,
     }
 )
 
 // middleware for uploding images
 
 
-exports.uploadEventImages = uploads.fields([
+exports.uploadEventImages = uploadsEvents.fields([
     { name: 'Images', maxCount: 3 }
 ])
+
+exports.uploadEventImages = uploadshomework.fields([
+    { name: 'Files', maxCount: 5 }
+])
+
+
 
 
 
@@ -316,9 +359,218 @@ exports.getAllEvent = catchAsync(async (req, res, next) => {
 })
 
 
+exports.createStudent = catchAsync(async (req, res, next) => {
+    const { name, email, password, mobile, address } = req.body;
+    if (!email || !password || !mobile || !address || !name) {
+        return next(new appError("please fill all the fields", 400))
+    }
+
+    const student = await User.create({
+        name,
+        email,
+        password,
+        mobile,
+        role: "STUDENT",
+        address,
+        ofBranch: req.user.studentBranch,
+
+
+    })
+
+    if (!student) {
+        return next(new appError("something went wrong please try again", 400))
+    }
+
+
+    // finding the branch
+    // const course= await Course.findByIdAndUpdate(courseId,{
+    //     $push : {students : student._id }
+    // },{
+    //     new : true
+    // })
+
+    // if (!course) {
+    //     await User.findByIdAndDelete(student._id)
+    //     return next(new appError("something went wrong please try again", 400))
+    // }
+
+
+
+    const updatebranch = await Batch.findOneAndUpdate({ createdBy: req.user._id }, {
+        $push: { student: student._id }
+    }, {
+        new: true
+    })
+
+
+
+    if (!updatebranch) {
+
+        await User.findByIdAndDelete(student._id)
+        return next(new appError("something went wrong please try again", 400))
+    }
+
+
+    // create presenty data for teachers
+    const presenty = await Presenty.create({
+        of: student._id,
+        ofBatch: req.user.studentBranch
+    })
+
+    if (!presenty) {
+
+        return next(new appError("something went wrong please try again", 400))
+    }
+
+    await User.findByIdAndUpdate(student._id, {
+        presentyData: presenty._id
+    })
+
+
+    res.status(200).send({
+        status: "success",
+        msg: `student's account created successfully  with email as ${email} , password ${password} `
+    })
+
+
+
+})
+
+
+
+exports.createCourse = catchAsync(async (req, res, next) => {
+    const { name, price, description, category } = req.body;
+    if (!name || !price || !description || !category) {
+        return next(new appError("please provide all the fields ", 400))
+    }
+
+    if (category !== "BEGINNER" || category !== "INTERMEDIATE" || category !== "ADVANCE") {
+        return next(new appError("please enter valid course category", 400))
+
+    }
+    const course = await Course.create({
+        name, price, description, category
+    })
+
+    if (!course) {
+        return next(new appError("failed to create course please try again", 400))
+    }
+
+    res.status(201).send({
+        status: "success",
+        message: "course created successfully"
+    })
+
+
+})
+
+
+
+
+exports.createHomework = catchAsync(async (req, res, next) => {
+
+    const { category, title, description } = req.body;
+    if (!category || !title || !description) {
+        return next(new appError("please enter all the fields", 400))
+    }
+
+    let media = []
+    if (req?.body?.Files.length > 0) {
+        console.log("CAME");
+
+
+        let obj = req.body.Files.map((el, i) => {
+            console.log(el);
+            try {
+                let m = cloudinary.v2.uploader.upload(`./public/homework/${el}`, {
+
+                    folder: 'homework', // Save files in a folder named 
+
+                });
+                return m
+            } catch (error) {
+                console.log("ERR", error);
+            }
+        })
+
+        obj = await Promise.all(obj)
+        // console.log(obj);
+        obj.length > 0 && obj.map(el => {
+            media.push(el.secure_url)
+        })
+
+        obj.length > 0 && req.body.Files.map((el, i) => {
+            fs.unlink(`./public/homework/${el}`, (err) => {
+                if (err) {
+                    console.log("err in del");
+                }
+                // console.log("Del");
+            })
+        })
+
+
+
+    }
+
+
+    if (category !== "BEGINNER" || category !== "INTERMEDIATE" || category !== "ADVANCE") {
+        return next(new appError("please enter valid course category", 400))
+
+    }
+
+    const hw = await Homework.create({
+        media,
+        description,
+        category,
+        createdBy: req.user._id
+
+    })
+
+    if (!hw) {
+        return next(new appError("homework not created please try again", 400))
+
+    }
+
+    res.status(200).send({
+        status: "success",
+        msg: `homework posted for category : ${category}`
+    })
+
+
+})
 
 
 
 
 
+exports.createStudentsBatch = catchAsync(async (req, res, next) => {
+    const { batchName } = req.body;
+
+
+    if (!batchName) {
+        return next(new appError("please fill all the fields", 400))
+    }
+    const batch = await Batch.create({
+        batchName,
+        createdBy: req.user._id
+    })
+
+    if (!batch) {
+        return next(new appError("batch not created please try again", 400))
+    }
+
+    await User.findByIdAndUpdate(req?.user?._id, {
+        studentBranch: batch._id
+    })
+
+    res.status(201).send({
+        status: "success",
+        msg: "batch created successfully"
+    })
+
+
+
+
+
+})
 

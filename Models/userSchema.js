@@ -47,6 +47,10 @@ const userSchema = new mongoose.Schema({
         type: mongoose.mongo.ObjectId,
         ref: 'batch'
     },
+    studentBranch: {
+        type: mongoose.mongo.ObjectId,
+        ref: 'batch'
+    },
     ofBranch: {
         type: mongoose.mongo.ObjectId,
         ref: 'batch'
@@ -54,6 +58,10 @@ const userSchema = new mongoose.Schema({
     presentyData: {
         type: mongoose.mongo.ObjectId,
         ref: "presenty"
+    },
+    courseData: {
+        type: mongoose.mongo.ObjectId,
+        ref: "course"
     }
 
 

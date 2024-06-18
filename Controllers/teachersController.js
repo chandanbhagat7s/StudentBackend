@@ -50,7 +50,6 @@ exports.resizeImage = catchAsync(async (req, res, next) => {
 const uploads = multer(
     {
         storage: multerStorage,
-        fileFilter: multerFilter
     }
 )
 
