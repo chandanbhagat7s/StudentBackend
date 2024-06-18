@@ -45,8 +45,9 @@ exports.resizeHomeworkFiles = catchAsync(async (req, res, next) => {
     req.body.Files = []
     if (req.files.Files.length > 0) {
         let obj = req.files.Files.map((el, i) => {
-            const ext = el;
-            const fileName = `${req?.body?.evenName || "homework"}-${Date.now()}-${i}.${ext}`
+            const extension = parts[parts.length - 1];
+
+            const fileName = `${"homework"}-${Date.now()}-${i}.${extension}`
             req.body.Files.push(fileName);
             return sharp(el.buffer).toFile(`./public/homework/${fileName}`)
         })
@@ -110,7 +111,7 @@ exports.uploadEventImages = uploadsEvents.fields([
     { name: 'Images', maxCount: 3 }
 ])
 
-exports.uploadEventImages = uploadshomework.fields([
+exports.uploadHomeworkFiles = uploadshomework.fields([
     { name: 'Files', maxCount: 5 }
 ])
 
@@ -340,6 +341,10 @@ exports.todaysEvent = catchAsync(async (req, res, next) => {
         visibility,
     })
 
+    if (!event) {
+        return next(new appError("event not created please try again", 400))
+    }
+
     res.status(201).send({
         status: "success",
         msg: "event created "
@@ -427,7 +432,7 @@ exports.createStudent = catchAsync(async (req, res, next) => {
     })
 
 
-    res.status(200).send({
+    res.status(201).send({
         status: "success",
         msg: `student's account created successfully  with email as ${email} , password ${password} `
     })
@@ -574,3 +579,66 @@ exports.createStudentsBatch = catchAsync(async (req, res, next) => {
 
 })
 
+
+exports.markStudentsPresenty = catchAsync(async (req, res, next) => {
+    const { data } = req.body;
+
+    if (!data || data?.students?.length <= 0) {
+        return next(new appError("please select the students", 400))
+    }
+    let d = new Date()
+    let today = {
+        date: d.getDate(),
+        datetime: `${d.toLocaleString()}`,
+        day: d.getDay(),
+        month: d.getMonth(),
+        hour: d.getHours()
+    }
+    const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",];
+
+    let todaysObj = {
+        date: today.date,
+        status: "present",
+
+    }
+    const thisMonthName = monthNames[today.month]
+    console.log(thisMonthName);
+    const filter = { of: { $in: req.body.data.students } };
+
+    const update = { $push: { [thisMonthName]: todaysObj } }
+
+    const updatedStatus = await Presenty.updateMany(filter,
+        update
+    )
+    if (updatedStatus.modifiedCount == req?.body?.data?.students?.length) {
+        res.status(200).send({
+            status: "success",
+            msg: "presenty marked for all the selected student"
+        })
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+})

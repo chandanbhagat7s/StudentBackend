@@ -50,6 +50,7 @@ exports.resizeImage = catchAsync(async (req, res, next) => {
 const uploads = multer(
     {
         storage: multerStorage,
+        fileFilter: multerFilter
     }
 )
 
@@ -118,6 +119,11 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
     console.log(result);
 
     let todaysObj = {};
+
+    // status : {
+    //     status : "present",
+    //     halfDay : true
+    // }
 
     if (status?.halfDay) {
         todaysObj = {
