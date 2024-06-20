@@ -25,7 +25,7 @@ const multerFilter = (req, file, cb) => {
 }
 
 exports.resizeImage = catchAsync(async (req, res, next) => {
-    console.log(req.body);
+    console.log("type is ", req.body);
     console.log("file is ", req.file);
     if (!req.file) {
         return next(new appError("please upload a file", 400))
@@ -60,25 +60,14 @@ exports.uploadImages = uploads.single('image')
 
 
 exports.markPresenty = catchAsync(async (req, res, next) => {
-    const { status } = req.body;
 
     // getting the details of holiday
 
 
-    /*
-    status {
-    status : ""
-    halfDay : true
-    }
-    */
-    // if (!status?.status) {
-    //     return next(new appError("please provide all the details to mark presenty", 400))
-    // }
 
-    // if (status.status !== "present" && status.status !== "absent") {
-    //     return next(new appError("teacher can be eiter present or absent not anything other", 400))
+    let status = req.body.halfDay == 'true' ? true : false
 
-    // }
+
 
     let d = new Date()
     let today = {
@@ -106,9 +95,9 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
 
 
 
-    // if (today.hour >= 12) {
-    //     return next(new appError("duration for marking presenty  is over you cannot mark it now  ", 400))
-    // }
+    if (today.hour >= 14) {
+        return next(new appError("duration for marking presenty  is over you cannot mark it now  ", 400))
+    }
     const result = await cloudinary.v2.uploader.upload(`public/user/${req.body.image}`, {
         folder: 'chordz', // Save files in a folder named 
         // width: 250,
@@ -120,24 +109,21 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
 
     let todaysObj = {};
 
-    // status : {
-    //     status : "present",
-    //     halfDay : true
-    // }
 
-    if (status?.halfDay) {
+
+    if (status) {
         todaysObj = {
             date: today.date,
             photo: result.secure_url,
-            status: status?.status || "present",
-            halfDay: status.halfDay
+            status: "present",
+            halfDay: true
 
         }
     } else {
         todaysObj = {
             date: today.date,
             photo: result.secure_url,
-            status: status?.status || "present",
+            status: "present",
 
         }
     }
@@ -192,6 +178,126 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
     })
 
 
+
+
+})
+
+exports.submitTodaysTask = catchAsync(async (req, res, next) => {
+
+    const { description } = req.body;
+    // if (!description) {
+    //     return next(new appError("please enter some text that u have done today", 400))
+    // }
+
+    const d = new Date()
+    let month = d.getMonth()
+    console.log(d.getDate());
+    const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",];
+    const todaysData = await Presenty.aggregate([
+        {
+            $match: {
+                of: req.user._id,
+
+            },
+        },
+        {
+            $group: {
+                _id: `$${[monthNames[month]]}`
+            }
+        },
+
+
+
+    ])
+        .unwind({
+            path: "$_id"
+        }).match({
+            "_id.date": d.getDate()
+        })
+
+    // console.log(todaysData);
+    if (todaysData.length == 0) {
+        return next(new appError(new appError("please mark the attandence first to submit task ", 400)))
+    }
+
+    let beforeTaskdata = todaysData[0]._id
+    // console.log(beforeTaskdata);
+    beforeTaskdata.description = description
+
+
+
+
+
+
+
+
+
+
+    let presentyData = await Presenty.findById(req.user.presentyData).select(`${monthNames[d.getMonth()]}`)
+    // console.log("data is ", presentyData, d.getMonth());
+    let onlyMonth = presentyData[monthNames[d.getMonth()]]
+    console.log("data of monthe", onlyMonth);
+
+
+    // get todays data 
+
+    let newDataWithDesc = onlyMonth.map(el => {
+        if (el.date == d.getDate()) {
+            console.log("found", el, description);
+            el = { ...el, description }
+        }
+
+        return el
+    })
+
+    console.log("new data ", newDataWithDesc);
+
+
+    presentyData[monthNames[d.getMonth()]] = newDataWithDesc
+    console.log("new [present data] ", presentyData);
+
+
+
+    let markedPresenty = await Presenty.findByIdAndUpdate(req?.user?.presentyData, presentyData, {
+        new: true
+    })
+
+    if (!markedPresenty) {
+        return next(new appError("task not submitted please try again", 500))
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    res.status(200).send({
+        status: "success",
+        message: "task submitted successfully "
+    })
 
 
 })

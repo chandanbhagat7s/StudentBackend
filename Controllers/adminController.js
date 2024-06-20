@@ -12,6 +12,7 @@ const cloudinary = require('cloudinary');
 const Event = require("../Models/Events");
 const Course = require("../Models/Course");
 const Homework = require("../Models/Homework");
+const { log } = require("console");
 
 
 
@@ -45,7 +46,8 @@ exports.resizeHomeworkFiles = catchAsync(async (req, res, next) => {
     req.body.Files = []
     if (req.files.Files.length > 0) {
         let obj = req.files.Files.map((el, i) => {
-            const extension = parts[parts.length - 1];
+            const extension = el.mimetype.split("/")[1];
+
 
             const fileName = `${"homework"}-${Date.now()}-${i}.${extension}`
             req.body.Files.push(fileName);
@@ -64,7 +66,12 @@ exports.resizeHomeworkFiles = catchAsync(async (req, res, next) => {
 
 exports.resizeEventImage = catchAsync(async (req, res, next) => {
     console.log(req.body);
-    console.log("file is ", req.files);
+    console.log("file is ", !Boolean(req?.files?.length));
+
+    if (!Boolean(req?.files?.length)) {
+        next()
+        return
+    }
     if (req?.files?.length > 0 && !req.files.Images) {
         return next(new appError("please upload a file", 400))
     }
@@ -168,8 +175,8 @@ exports.createTeachersBatch = catchAsync(async (req, res, next) => {
 })
 
 exports.createTeacher = catchAsync(async (req, res, next) => {
-    const { name, email, password, mobile, address } = req.body;
-    if (!email || !password || !mobile || !address || !name) {
+    const { name, email, password, mobile, address, startingDate, teacherSalary, teachercategory } = req.body;
+    if (!email || !password || !mobile || !address || !name || !startingDate || !teacherSalary || !teachercategory) {
         return next(new appError("please fill all the fields", 400))
     }
 
@@ -180,7 +187,10 @@ exports.createTeacher = catchAsync(async (req, res, next) => {
         mobile,
         role: "TEACHER",
         address,
-        ofBranch: req.user.teachersBranch
+        ofBranch: req.user.teachersBranch,
+        startingDate,
+        teacherSalary,
+        teachercategory
     })
 
     if (!teacher) {
@@ -282,19 +292,18 @@ exports.markTodayAsHoliday = catchAsync(async (req, res, next) => {
 
 exports.todaysEvent = catchAsync(async (req, res, next) => {
     const {
-        eventName,
         description,
         links,
-        visibility,
     } = req.body;
+    console.log("came inside");
 
-    // if (!eventName || !description || !visibility) {
-    //     return next(new appError("please enter all the fileds to proceed", 400))
-    // }
+    if (!description) {
+        return next(new appError("please enter all the fileds to proceed", 400))
+    }
     let media = [];
 
     console.log(req.body);
-    if (req?.body?.Images.length > 0) {
+    if (Boolean(req?.files?.length > 0)) {
         console.log("CAME");
 
 
@@ -334,11 +343,11 @@ exports.todaysEvent = catchAsync(async (req, res, next) => {
 
 
     const event = await Event.create({
-        eventName,
+
         description,
         links,
         media,
-        visibility,
+
     })
 
     if (!event) {
@@ -475,9 +484,9 @@ exports.createCourse = catchAsync(async (req, res, next) => {
 exports.createHomework = catchAsync(async (req, res, next) => {
 
     const { category, title, description } = req.body;
-    if (!category || !title || !description) {
-        return next(new appError("please enter all the fields", 400))
-    }
+    // if (!category || !title || !description) {
+    //     return next(new appError("please enter all the fields", 400))
+    // }
 
     let media = []
     if (req?.body?.Files.length > 0) {
@@ -518,15 +527,15 @@ exports.createHomework = catchAsync(async (req, res, next) => {
     }
 
 
-    if (category !== "BEGINNER" || category !== "INTERMEDIATE" || category !== "ADVANCE") {
-        return next(new appError("please enter valid course category", 400))
+    // if (category !== "BEGINNER" || category !== "INTERMEDIATE" || category !== "ADVANCE") {
+    //     return next(new appError("please enter valid course category", 400))
 
-    }
+    // }
 
     const hw = await Homework.create({
         media,
-        description,
-        category,
+        // description,
+        // category,
         createdBy: req.user._id
 
     })

@@ -51,6 +51,16 @@ const userSchema = new mongoose.Schema({
         type: mongoose.mongo.ObjectId,
         ref: 'batch'
     },
+    startingDate: {
+        type: Date,
+
+    },
+    teachercategory: {
+        type: String
+    },
+    teacherSalary: {
+        type: Number
+    },
     ofBranch: {
         type: mongoose.mongo.ObjectId,
         ref: 'batch'

@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 
 exports.isLoggedIn = catchAsync(async (req, res, next) => {
+    // console.log("req is ", req);
     // bringin out the token from the reqst header
 
     // console.log("header is", req.headers);
@@ -30,6 +31,7 @@ exports.isLoggedIn = catchAsync(async (req, res, next) => {
     }
 
     // future use 
+    // console.log(freshUser);
     req.user = freshUser;
 
     next()
