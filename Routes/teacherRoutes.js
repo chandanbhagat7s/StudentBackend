@@ -6,8 +6,8 @@ const { markPresenty, uploadImages, resizeImage, submitTodaysTask } = require('.
 const teacherRoute = express.Router();
 
 teacherRoute.use(isLoggedIn, giveAccessTo("TEACHER"))
+teacherRoute.post("/submitTodaysTask", submitTodaysTask)
 teacherRoute.post("/markPresent", uploadImages, resizeImage, markPresenty)
-teacherRoute.get("/submitTodaysTask", submitTodaysTask)
 
 
 module.exports = teacherRoute;

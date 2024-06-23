@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const batchSchema = mongoose.Schema({
     batchName: {
         type: String,
+        unique: true,
         required: [true, "must provide batch name"]
     },
     createdBy: {
@@ -13,6 +14,10 @@ const batchSchema = mongoose.Schema({
     createdOn: {
         type: Date,
         default: Date.now()
+    },
+    batchAddress: {
+        type: String,
+        required: [true, "please provide address of batch"]
     },
 
     student: {

@@ -50,6 +50,9 @@ const presentySchema = mongoose.Schema({
     }
     , December: {
         type: [Object],
+    },
+    lastMarkedPresenty: {
+        type: String
     }
 })
 

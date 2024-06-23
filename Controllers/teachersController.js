@@ -31,7 +31,43 @@ exports.resizeImage = catchAsync(async (req, res, next) => {
         return next(new appError("please upload a file", 400))
     }
 
+
+
+
+
     const d = new Date()
+
+    let today = {
+        date: d.getDate(),
+        day: d.getDay(),
+        month: d.getMonth(),
+
+    }
+    let { holidays } = await Batch.findById(req.user.ofBranch).select("holidays")
+    let isTodayHoliday = false;
+    holidays.length > 0 && holidays.map((h) => {
+        if (h.date == today.date && h.month == today.month) {
+            isTodayHoliday = true
+        }
+    })
+    if (isTodayHoliday) {
+
+        return next(new appError("today holiday is schedule you cannot mark presenty  ", 400))
+    }
+    if (today.day == 0) {
+        return next(new appError("today is sunday you cannot mark presenty  ", 400))
+    }
+
+
+
+    if (today.hour >= 14) {
+
+        return next(new appError("duration for marking presenty  is over you cannot mark it now  ", 400))
+    }
+
+
+
+
     // cover image
     req.body.image = `${req.user._id}-${d.getDate()}.jpg`
     await sharp(req.file.buffer).toFormat('jpeg').toFile(`public/user/${req.body.image}`)
@@ -78,26 +114,43 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
         hour: d.getHours()
     }
 
-    let { holidays } = await Batch.findById(req.user.ofBranch).select("holidays")
-    let isTodayHoliday = false;
-    holidays.length > 0 && holidays.map((h) => {
-        if (h.date == today.date && h.month == today.month) {
-            isTodayHoliday = true
-        }
-    })
-    if (isTodayHoliday) {
 
-        return next(new appError("today holiday is schedule you cannot mark presenty  ", 400))
+
+    const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",];
+
+
+
+
+    let presentyData = await Presenty.findById(req.user.presentyData).select(`${monthNames[today.month]} lastMarkedPresenty`)
+    console.log("data is ", presentyData, today.month);
+    let onlyMonth = presentyData[monthNames[today.month]]
+
+    if (presentyData?.lastMarkedPresenty == `${today.date}-${today.month}`) {
+        fs.unlink(`public/user/${req.body.image}`, (err) => {
+
+            console.log('path/file.txt was deleted');
+        })
+        return next(new appError("you have already marked presenty for today ", 400))
     }
-    if (today.day == 0) {
-        return next(new appError("today is sunday you cannot mark presenty  ", 400))
-    }
 
 
 
-    if (today.hour >= 14) {
-        return next(new appError("duration for marking presenty  is over you cannot mark it now  ", 400))
-    }
+
+
+
+
     const result = await cloudinary.v2.uploader.upload(`public/user/${req.body.image}`, {
         folder: 'chordz', // Save files in a folder named 
         // width: 250,
@@ -129,26 +182,6 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
     }
 
 
-    const monthNames = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",];
-
-
-
-
-    let presentyData = await Presenty.findById(req.user.presentyData).select(`${monthNames[today.month]}`)
-    console.log("data is ", presentyData, today.month);
-    let onlyMonth = presentyData[monthNames[today.month]]
 
 
     onlyMonth.push(todaysObj)
@@ -157,7 +190,7 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
 
 
 
-    let markedPresenty = await Presenty.findByIdAndUpdate(req?.user?.presentyData, presentyData, {
+    let markedPresenty = await Presenty.findByIdAndUpdate(req?.user?.presentyData, { ...presentyData, lastMarkedPresenty: `date` }, {
         new: true
     })
 
@@ -185,9 +218,13 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
 exports.submitTodaysTask = catchAsync(async (req, res, next) => {
 
     const { description } = req.body;
-    // if (!description) {
-    //     return next(new appError("please enter some text that u have done today", 400))
-    // }
+    if (!description) {
+        return next(new appError("please enter some text that u have done today", 400))
+    }
+    if (description.length < 20) {
+        return next(new appError("describle more than 20 characters ", 400))
+
+    }
 
     const d = new Date()
     let month = d.getMonth()
@@ -238,13 +275,6 @@ exports.submitTodaysTask = catchAsync(async (req, res, next) => {
 
 
 
-
-
-
-
-
-
-
     let presentyData = await Presenty.findById(req.user.presentyData).select(`${monthNames[d.getMonth()]}`)
     // console.log("data is ", presentyData, d.getMonth());
     let onlyMonth = presentyData[monthNames[d.getMonth()]]
@@ -277,19 +307,6 @@ exports.submitTodaysTask = catchAsync(async (req, res, next) => {
     if (!markedPresenty) {
         return next(new appError("task not submitted please try again", 500))
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

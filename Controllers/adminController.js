@@ -66,15 +66,13 @@ exports.resizeHomeworkFiles = catchAsync(async (req, res, next) => {
 
 exports.resizeEventImage = catchAsync(async (req, res, next) => {
     console.log(req.body);
-    console.log("file is ", !Boolean(req?.files?.length));
+    console.log("file is ", req.files, Boolean(req?.files.Images?.length));
 
-    if (!Boolean(req?.files?.length)) {
+    if (!Boolean(req?.files.Images?.length)) {
         next()
         return
     }
-    if (req?.files?.length > 0 && !req.files.Images) {
-        return next(new appError("please upload a file", 400))
-    }
+
 
 
 
@@ -149,14 +147,15 @@ exports.createStudent = catchAsync(async (req, res, next) => {
 
 
 exports.createTeachersBatch = catchAsync(async (req, res, next) => {
-    const { batchName } = req.body;
+    const { batchName, batchAddress } = req.body;
 
 
-    if (!batchName) {
+    if (!batchName || !batchAddress) {
         return next(new appError("please fill all the fields", 400))
     }
     const batch = await Batch.create({
         batchName,
+        batchAddress,
         createdBy: req.user._id
     })
 
@@ -175,10 +174,27 @@ exports.createTeachersBatch = catchAsync(async (req, res, next) => {
 })
 
 exports.createTeacher = catchAsync(async (req, res, next) => {
-    const { name, email, password, mobile, address, startingDate, teacherSalary, teachercategory } = req.body;
-    if (!email || !password || !mobile || !address || !name || !startingDate || !teacherSalary || !teachercategory) {
+    const { name, email, password, mobile, address, startingDate, teacherSalary, teachercategory, batchName } = req.body;
+    if (!email || !password || !mobile || !address || !name || !startingDate || !teacherSalary || !teachercategory || !batchName) {
         return next(new appError("please fill all the fields", 400))
     }
+
+    const batch = await Batch.findOne({
+        batchName
+    })
+
+
+    console.log("for batch", batch);
+
+    if (batch == null) {
+        return next(new appError("please provide valid batch name to create a teacher", 400))
+    }
+
+    if (mobile.length < 10 && mobile.length > 10) {
+        return next(new appError("please enter valid 10 digit number", 400))
+    }
+
+
 
     const teacher = await User.create({
         name,
@@ -187,10 +203,11 @@ exports.createTeacher = catchAsync(async (req, res, next) => {
         mobile,
         role: "TEACHER",
         address,
-        ofBranch: req.user.teachersBranch,
+        ofBranch: batch._id,
         startingDate,
         teacherSalary,
-        teachercategory
+        teachercategory,
+        pass: password
     })
 
     if (!teacher) {
@@ -210,12 +227,13 @@ exports.createTeacher = catchAsync(async (req, res, next) => {
         await User.findByIdAndDelete(teacher._id)
         return next(new appError("something went wrong please try again", 400))
     }
-
+    let d = new Date()
 
     // create presenty data for teachers
     const presenty = await Presenty.create({
         of: teacher._id,
-        ofBatch: req.user.teachersBranch
+        ofBatch: batch._id,
+        lastMarkedPresenty: ``
     })
 
     if (!presenty) {
@@ -236,6 +254,162 @@ exports.createTeacher = catchAsync(async (req, res, next) => {
 
 
 })
+
+exports.getAllBatches = catchAsync(async (req, res, next) => {
+
+    const batches = await Batch.find({});
+
+
+
+    res.status(200).send({
+        status: "success",
+        batches
+    })
+
+
+
+})
+
+exports.getAllBatchesName = catchAsync(async (req, res, next) => {
+
+    const batches = await Batch.find({}).select("_id batchName");
+
+
+
+    res.status(200).send({
+        status: "success",
+        batches
+    })
+
+
+
+})
+
+exports.getBatchById = catchAsync(async (req, res, next) => {
+
+    const id = req.params.batchId;
+    if (!id) {
+        return next(new appError("please provide id of batch ", 400))
+    }
+
+    const batche = await Batch.findById(id).populate("teacher", "name pass email mobile address presentyData teacherSalary teachercategory startingDate _id")
+
+
+
+    res.status(200).send({
+        status: "success",
+        batche
+    })
+
+
+
+})
+
+
+exports.getAllTeachers = catchAsync(async (req, res, next) => {
+
+    const id = req.params.branchId;
+    if (!id) {
+        return next(new appError("please provide id", 400))
+    }
+    const allTeachersData = await User.find({
+        ofBranch: id
+    })
+
+
+    res.status(200).send({
+        status: "success",
+        allTeachersData
+    })
+
+
+})
+
+exports.updateteacher = catchAsync(async (req, res, next) => {
+    const {
+        address,
+        startingDate,
+        teachercategory,
+        teacherSalary,
+        email
+    } = req.body;
+
+
+
+
+
+    const teacher = await User.findOneAndUpdate({
+        email
+    }, {
+        address,
+        startingDate,
+        teachercategory,
+        teacherSalary,
+    }, {
+        new: true,
+        runValidators: true
+    })
+
+    if (!teacher) {
+        return next(new appError("teacher not updated please try again", 400))
+    }
+
+    res.status(200).send({
+        status: "success",
+        msg: "teacher updated successfully"
+    })
+
+
+
+
+})
+
+
+
+
+exports.deleteTeacher = catchAsync(async (req, res, next) => {
+    const {
+
+        email
+    } = req.body;
+
+    if (!email) {
+        return next(new appError("please provide teachers details to delete", 400))
+    }
+
+
+
+
+
+    const teacher = await User.findOne({
+        email
+    })
+
+
+
+    // first deleting presenty sheet
+    // await Presenty.findByIdAndDelete(teacher.presentyData) 
+
+    await Batch.findByIdAndUpdate(teacher.ofBranch, {
+        $pull: { teacher: teacher._id }
+    })
+
+    // // now deleting the teacher
+    await User.findByIdAndDelete(teacher._id)
+
+
+    res.status(200).send({
+        status: "success",
+        msg: "teacher updated successfully"
+    })
+
+
+
+
+})
+
+
+
 
 exports.markTodayAsHoliday = catchAsync(async (req, res, next) => {
     const { date, reason } = req.body;
@@ -303,7 +477,7 @@ exports.todaysEvent = catchAsync(async (req, res, next) => {
     let media = [];
 
     console.log(req.body);
-    if (Boolean(req?.files?.length > 0)) {
+    if (req.body?.Images?.length > 0) {
         console.log("CAME");
 
 
@@ -368,7 +542,7 @@ exports.getAllEvent = catchAsync(async (req, res, next) => {
 
     res.status(200).send({
         status: "success",
-        events: events
+        events: events.reverse()
     })
 })
 
