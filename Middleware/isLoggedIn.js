@@ -17,6 +17,8 @@ exports.isLoggedIn = catchAsync(async (req, res, next) => {
         token = req.cookies.jwt;
     }
 
+
+
     if (!token) {
         return next(new appError('please login to get access', 401))
     }

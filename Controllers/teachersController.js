@@ -54,16 +54,16 @@ exports.resizeImage = catchAsync(async (req, res, next) => {
 
         return next(new appError("today holiday is schedule you cannot mark presenty  ", 400))
     }
-    if (today.day == 0) {
-        return next(new appError("today is sunday you cannot mark presenty  ", 400))
-    }
+    // if (today.day == 0) {
+    //     return next(new appError("today is sunday you cannot mark presenty  ", 400))
+    // }
 
 
 
-    if (today.hour >= 14) {
+    // if (today.hour >= 14) {
 
-        return next(new appError("duration for marking presenty  is over you cannot mark it now  ", 400))
-    }
+    //     return next(new appError("duration for marking presenty  is over you cannot mark it now  ", 400))
+    // }
 
 
 
@@ -134,7 +134,7 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
 
 
     let presentyData = await Presenty.findById(req.user.presentyData).select(`${monthNames[today.month]} lastMarkedPresenty`)
-    console.log("data is ", presentyData, today.month);
+
     let onlyMonth = presentyData[monthNames[today.month]]
 
     if (presentyData?.lastMarkedPresenty == `${today.date}-${today.month}`) {
@@ -158,7 +158,7 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
         // gravity: 'faces', // This option tells cloudinary to center the image around detected faces (if any) after cropping or resizing the original image
         // crop: 'fill',
     });
-    console.log(result);
+
 
     let todaysObj = {};
 
@@ -187,10 +187,11 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
     onlyMonth.push(todaysObj)
 
     presentyData[today.month] = onlyMonth
+    presentyData.lastMarkedPresenty = `${today.date}-${today.month}`
 
 
 
-    let markedPresenty = await Presenty.findByIdAndUpdate(req?.user?.presentyData, { ...presentyData, lastMarkedPresenty: `date` }, {
+    let markedPresenty = await Presenty.findByIdAndUpdate(req?.user?.presentyData, { ...presentyData, }, {
         new: true
     })
 
@@ -228,6 +229,8 @@ exports.submitTodaysTask = catchAsync(async (req, res, next) => {
 
     const d = new Date()
     let month = d.getMonth()
+
+
     console.log(d.getDate());
     const monthNames = [
         "January",
@@ -269,6 +272,8 @@ exports.submitTodaysTask = catchAsync(async (req, res, next) => {
         return next(new appError(new appError("please mark the attandence first to submit task ", 400)))
     }
 
+
+
     let beforeTaskdata = todaysData[0]._id
     // console.log(beforeTaskdata);
     beforeTaskdata.description = description
@@ -278,25 +283,22 @@ exports.submitTodaysTask = catchAsync(async (req, res, next) => {
     let presentyData = await Presenty.findById(req.user.presentyData).select(`${monthNames[d.getMonth()]}`)
     // console.log("data is ", presentyData, d.getMonth());
     let onlyMonth = presentyData[monthNames[d.getMonth()]]
-    console.log("data of monthe", onlyMonth);
+
 
 
     // get todays data 
 
     let newDataWithDesc = onlyMonth.map(el => {
         if (el.date == d.getDate()) {
-            console.log("found", el, description);
             el = { ...el, description }
         }
 
         return el
     })
 
-    console.log("new data ", newDataWithDesc);
 
 
     presentyData[monthNames[d.getMonth()]] = newDataWithDesc
-    console.log("new [present data] ", presentyData);
 
 
 
@@ -317,6 +319,41 @@ exports.submitTodaysTask = catchAsync(async (req, res, next) => {
     })
 
 
+})
+
+
+exports.getMyPresentyDataByMonth = catchAsync(async (req, res, next) => {
+
+    const month = req.params.month;
+    if (!month) {
+        return next(new appError("please enter month to get presenty sheed ", 400))
+    }
+    const presentyData = await Presenty.aggregate([
+        {
+            $match: {
+                of: req.user._id,
+
+            },
+        },
+        {
+            $group: {
+                _id: `$${[month]}`
+            }
+        },
+
+
+
+    ]).unwind({
+        path: "$_id"
+    })
+    console.log(presentyData);
+
+
+
+    res.status(200).send({
+        status: "success",
+        presentyData
+    })
 })
 
 

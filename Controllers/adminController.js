@@ -412,10 +412,21 @@ exports.deleteTeacher = catchAsync(async (req, res, next) => {
 
 
 exports.markTodayAsHoliday = catchAsync(async (req, res, next) => {
-    const { date, reason } = req.body;
+    const { date, reason, batchName } = req.body;
     if (!date, !reason) {
         return next(new appError("please provide all the fields", 400));
     }
+    const batch = await Batch.findOne({
+        batchName
+    })
+
+
+    console.log("for batch", batch);
+
+    if (batch == null) {
+        return next(new appError("please provide valid batch name to create a teacher", 400))
+    }
+
     const d = new Date()
     if (d.getDate() > date) {
         return next(new appError("you cannot mark holiday for past", 400));
@@ -424,7 +435,7 @@ exports.markTodayAsHoliday = catchAsync(async (req, res, next) => {
 
 
 
-    const listOfHolidays = await Batch.findById(req.user.teachersBranch).select("holidays");
+    const listOfHolidays = await Batch.findById(batch._id).select("holidays");
 
 
     // if (listOfHolidays.includes()) {
@@ -814,14 +825,50 @@ exports.markStudentsPresenty = catchAsync(async (req, res, next) => {
 
 
 
+})
+
+
+
+exports.getPresentyDataOfTeacherbyMonth = catchAsync(async (req, res, next) => {
+
+
+    const { teacherId, month } = req.params;
+    if (!teacherId || !month) {
+        return next(new appError("please enter all the parameter to get presenty sheet", 400))
+    }
+    const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",];
+
+    if (!monthNames.includes(month)) {
+        return next(new appError("please enter month in valid format ", 400))
+    }
+
+
+    const presentyData = await Presenty.find({
+        of: teacherId
+    }).select(`${month} -_id lastMarkedPresenty`)
 
 
 
 
-
-
-
-
-
+    res.status(200).send({
+        status: "success",
+        presentyData
+    })
 
 })
+
+
+
+
