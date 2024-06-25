@@ -7,6 +7,7 @@ const cloudinary = require('cloudinary');
 const sharp = require("sharp");
 
 const fs = require('fs');
+const Notify = require("../Models/Notify");
 
 
 const multerStorage = multer.memoryStorage();
@@ -357,7 +358,26 @@ exports.getMyPresentyDataByMonth = catchAsync(async (req, res, next) => {
 })
 
 
+exports.getAllMyNotification = catchAsync(async (req, res, next) => {
+    const forMe = await Notify.find({
+        to: req.user._id
+    })
 
+    const ofMyBranch = await Notify.find({
+        toBatch: req.user.ofBranch
+    })
+
+    res.status(200).send({
+        status: "success",
+        data: {
+            forMe,
+            ofMyBranch
+        }
+    })
+
+
+
+})
 
 
 

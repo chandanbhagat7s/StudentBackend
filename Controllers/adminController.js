@@ -13,6 +13,7 @@ const Event = require("../Models/Events");
 const Course = require("../Models/Course");
 const Homework = require("../Models/Homework");
 const { log } = require("console");
+const Notify = require("../Models/Notify");
 
 
 
@@ -148,7 +149,7 @@ exports.createStudent = catchAsync(async (req, res, next) => {
 
 exports.createTeachersBatch = catchAsync(async (req, res, next) => {
     const { batchName, batchAddress } = req.body;
-
+    console.log(req.body);
 
     if (!batchName || !batchAddress) {
         return next(new appError("please fill all the fields", 400))
@@ -868,6 +869,90 @@ exports.getPresentyDataOfTeacherbyMonth = catchAsync(async (req, res, next) => {
     })
 
 })
+
+
+
+exports.createNotificationForTeacher = catchAsync(async (req, res, next) => {
+
+    const { message } = req.body;
+    const { teacherId } = req.params;
+
+
+
+    if (!message) {
+
+        return next(new appError("please provide message for sending notification", 400))
+    }
+
+    if (!teacherId) {
+        return next(new appError("please pass teacher id", 400))
+    }
+
+    const teacher = await User.findById(teacherId)
+
+    if (!teacher) {
+        return next(new appError("please select valid teacher, teacher not found", 400))
+
+    }
+
+
+    const Notification = await Notify.create({
+        to: teacher._id,
+        message
+    })
+    if (!Notification) {
+        return next(new appError("notification not created okease ty again", 400))
+    }
+
+
+    res.status(200).send({
+        status: "success",
+        msg: "Notified to teacher"
+    })
+})
+
+
+
+exports.createNotificationForBatch = catchAsync(async (req, res, next) => {
+
+    const { message } = req.body;
+    const { batchId } = req.params;
+
+
+
+    if (!message) {
+
+        return next(new appError("please provide message for sending notification", 400))
+    }
+
+    if (!batchId) {
+        return next(new appError("please pass teacher id", 400))
+    }
+
+    const batch = await Batch.findById(batchId)
+
+    if (!batch) {
+        return next(new appError("please select valid batch", 400))
+
+    }
+
+
+    const Notification = await Notify.create({
+        toBatch: batch._id,
+        message
+    })
+
+    if (!Notification) {
+        return next(new appError("notification not created okease ty again", 400))
+    }
+
+
+    res.status(200).send({
+        status: "success",
+        msg: "Notified to batch"
+    })
+})
+
 
 
 
