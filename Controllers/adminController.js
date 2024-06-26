@@ -952,7 +952,25 @@ exports.createNotificationForBatch = catchAsync(async (req, res, next) => {
     })
 })
 
+exports.getTeacherById = catchAsync(async (req, res, next) => {
+    const teacherId = req.params.teacherId;
 
+    if (!teacherId) {
+        return next(new appError("please enter id", 400))
+    }
+
+    const teacher = await User.findById(teacherId)
+
+    if (!teacher) {
+        return next(new appError("no teacher found ", 400))
+
+    }
+
+    res.status(200).send({
+        status: "success",
+        teacher
+    })
+})
 
 
 

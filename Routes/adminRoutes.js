@@ -1,5 +1,5 @@
 const express = require('express');
-const { createTeachersBatch, createTeacher, markTodayAsHoliday, todaysEvent, getAllEvent, uploadEventImages, resizeEventImage, createStudent, createStudentsBatch, createHomework, resizeHomeworkFiles, uploadHomeworkFiles, markStudentsPresenty, getAllTeachers, getAllBatches, getBatchById, getAllBatchesName, updateteacher, deleteTeacher, getPresentyDataOfTeacherbyMonth, createNotificationForTeacher, createNotificationForBatch } = require('../Controllers/adminController');
+const { createTeachersBatch, createTeacher, markTodayAsHoliday, todaysEvent, getAllEvent, uploadEventImages, resizeEventImage, createStudent, createStudentsBatch, createHomework, resizeHomeworkFiles, uploadHomeworkFiles, markStudentsPresenty, getAllTeachers, getAllBatches, getBatchById, getAllBatchesName, updateteacher, deleteTeacher, getPresentyDataOfTeacherbyMonth, createNotificationForTeacher, createNotificationForBatch, getTeacherById } = require('../Controllers/adminController');
 const { isLoggedIn } = require('../Middleware/isLoggedIn');
 const { giveAccessTo } = require('../Middleware/giveAccessTo');
 
@@ -16,6 +16,7 @@ adminRouter.get("/getAllBatchNames", getAllBatchesName) //done
 adminRouter.get("/getBatch/:batchId", getBatchById) //done
 
 adminRouter.get("/getPresentyData/:teacherId/:month", getPresentyDataOfTeacherbyMonth) //done
+adminRouter.get("/getDataOfTeacher/:teacherId", getTeacherById) //done
 
 adminRouter.post("/createTeachers", createTeacher) // done
 adminRouter.patch("/updateTeacher", updateteacher) // done
