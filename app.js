@@ -31,10 +31,8 @@ app.use(morgan("dev"))
 app.use(compression())
 
 const corsOptions = {
-    origin: "http://192.168.0.169:4200", credentials: true,
-    'Access-Control-Allow-Origin': '*',
-    Vary: 'Origin'
-
+    origin: "*", // Allow all origins
+    credentials: false // Credentials cannot be true when origin is '*'
 };
 
 

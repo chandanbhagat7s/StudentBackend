@@ -185,7 +185,6 @@ exports.createTeacher = catchAsync(async (req, res, next) => {
     })
 
 
-    console.log("for batch", batch);
 
     if (batch == null) {
         return next(new appError("please provide valid batch name to create a teacher", 400))
