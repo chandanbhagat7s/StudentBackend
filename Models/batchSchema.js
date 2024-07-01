@@ -33,6 +33,14 @@ const batchSchema = mongoose.Schema({
     holidays: {
         type: [Object],
 
+    },
+    todaysPresentyMarked: {
+        type: [mongoose.mongo.ObjectId],
+        ref: "user"
+    },
+    isOf: {
+        type: String,
+
     }
 
 

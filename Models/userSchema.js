@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema({
         ref: 'batch'
     },
     studentBranch: {
-        type: mongoose.mongo.ObjectId,
+        type: [mongoose.mongo.ObjectId],
         ref: 'batch'
     },
     startingDate: {
@@ -76,7 +76,8 @@ const userSchema = new mongoose.Schema({
     pass: {
         type: String,
         select: false
-    }
+    },
+
 
 
 

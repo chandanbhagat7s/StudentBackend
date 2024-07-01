@@ -14,6 +14,7 @@ const Course = require("../Models/Course");
 const Homework = require("../Models/Homework");
 const { log } = require("console");
 const Notify = require("../Models/Notify");
+const Leave = require("../Models/Leaves");
 
 
 
@@ -157,7 +158,8 @@ exports.createTeachersBatch = catchAsync(async (req, res, next) => {
     const batch = await Batch.create({
         batchName,
         batchAddress,
-        createdBy: req.user._id
+        createdBy: req.user._id,
+        isOf: "TEACHER"
     })
 
     if (!batch) {
@@ -272,7 +274,7 @@ exports.getAllBatches = catchAsync(async (req, res, next) => {
 
 exports.getAllBatchesName = catchAsync(async (req, res, next) => {
 
-    const batches = await Batch.find({}).select("_id batchName");
+    const batches = await Batch.find({ isOf: "TEACHER" }).select("_id batchName");
 
 
 
@@ -559,10 +561,27 @@ exports.getAllEvent = catchAsync(async (req, res, next) => {
 
 
 exports.createStudent = catchAsync(async (req, res, next) => {
-    const { name, email, password, mobile, address } = req.body;
-    if (!email || !password || !mobile || !address || !name) {
+    const { name, email, password, mobile, address, batchName } = req.body;
+    if (!email || !password || !mobile || !address || !name || !batchName) {
         return next(new appError("please fill all the fields", 400))
     }
+
+    const batch = await Batch.findOne({
+        batchName
+    })
+
+
+
+    if (batch == null) {
+        return next(new appError("please provide valid batch name to create a student", 400))
+    }
+
+    if (mobile.length < 10 && mobile.length > 10) {
+        return next(new appError("please enter valid 10 digit number", 400))
+    }
+
+
+
 
     const student = await User.create({
         name,
@@ -571,7 +590,7 @@ exports.createStudent = catchAsync(async (req, res, next) => {
         mobile,
         role: "STUDENT",
         address,
-        ofBranch: req.user.studentBranch,
+        ofBranch: batch._id,
 
 
     })
@@ -637,121 +656,24 @@ exports.createStudent = catchAsync(async (req, res, next) => {
 
 
 
-exports.createCourse = catchAsync(async (req, res, next) => {
-    const { name, price, description, category } = req.body;
-    if (!name || !price || !description || !category) {
-        return next(new appError("please provide all the fields ", 400))
-    }
 
-    if (category !== "BEGINNER" || category !== "INTERMEDIATE" || category !== "ADVANCE") {
-        return next(new appError("please enter valid course category", 400))
-
-    }
-    const course = await Course.create({
-        name, price, description, category
-    })
-
-    if (!course) {
-        return next(new appError("failed to create course please try again", 400))
-    }
-
-    res.status(201).send({
-        status: "success",
-        message: "course created successfully"
-    })
-
-
-})
-
-
-
-
-exports.createHomework = catchAsync(async (req, res, next) => {
-
-    const { category, title, description } = req.body;
-    // if (!category || !title || !description) {
-    //     return next(new appError("please enter all the fields", 400))
-    // }
-
-    let media = []
-    if (req?.body?.Files.length > 0) {
-        console.log("CAME");
-
-
-        let obj = req.body.Files.map((el, i) => {
-            console.log(el);
-            try {
-                let m = cloudinary.v2.uploader.upload(`./public/homework/${el}`, {
-
-                    folder: 'homework', // Save files in a folder named 
-
-                });
-                return m
-            } catch (error) {
-                console.log("ERR", error);
-            }
-        })
-
-        obj = await Promise.all(obj)
-        // console.log(obj);
-        obj.length > 0 && obj.map(el => {
-            media.push(el.secure_url)
-        })
-
-        obj.length > 0 && req.body.Files.map((el, i) => {
-            fs.unlink(`./public/homework/${el}`, (err) => {
-                if (err) {
-                    console.log("err in del");
-                }
-                // console.log("Del");
-            })
-        })
-
-
-
-    }
-
-
-    // if (category !== "BEGINNER" || category !== "INTERMEDIATE" || category !== "ADVANCE") {
-    //     return next(new appError("please enter valid course category", 400))
-
-    // }
-
-    const hw = await Homework.create({
-        media,
-        // description,
-        // category,
-        createdBy: req.user._id
-
-    })
-
-    if (!hw) {
-        return next(new appError("homework not created please try again", 400))
-
-    }
-
-    res.status(200).send({
-        status: "success",
-        msg: `homework posted for category : ${category}`
-    })
-
-
-})
 
 
 
 
 
 exports.createStudentsBatch = catchAsync(async (req, res, next) => {
-    const { batchName } = req.body;
+    const { batchName, batchAddress } = req.body;
 
 
-    if (!batchName) {
+    if (!batchName || !batchAddress) {
         return next(new appError("please fill all the fields", 400))
     }
     const batch = await Batch.create({
         batchName,
-        createdBy: req.user._id
+        createdBy: req.user._id,
+        batchAddress,
+        isOf: "STUDENT"
     })
 
     if (!batch) {
@@ -759,7 +681,7 @@ exports.createStudentsBatch = catchAsync(async (req, res, next) => {
     }
 
     await User.findByIdAndUpdate(req?.user?._id, {
-        studentBranch: batch._id
+        $push: { studentBranch: batch._id }
     })
 
     res.status(201).send({
@@ -804,7 +726,6 @@ exports.markStudentsPresenty = catchAsync(async (req, res, next) => {
 
     let todaysObj = {
         date: today.date,
-        status: "present",
 
     }
     const thisMonthName = monthNames[today.month]
@@ -972,5 +893,405 @@ exports.getTeacherById = catchAsync(async (req, res, next) => {
     })
 })
 
+
+exports.getDashboardInfo = catchAsync(async (req, res, next) => {
+    const d = new Date()
+
+    const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",];
+    // teachers name and presenty date
+    const batchdataWithTeacher = await Batch.find({
+        createdBy: req.user._id
+    }).populate({
+        path: 'teacher',
+        select: "name presentyData",
+        populate: {
+            path: 'presentyData',
+            select: `lastMarkedPresenty ${monthNames[d.getMonth()]}`
+        }
+    })
+
+
+    //  teachers todays presenty
+
+
+
+
+    console.log(batchdataWithTeacher);
+    // User.
+
+
+
+    res.status(200).send({
+        status: "success",
+        data: {
+            batchDataWithTeacher: batchdataWithTeacher,
+
+        }
+    })
+})
+
+
+
+
+exports.getPresentyStatusForToday = catchAsync(async (req, res, next) => {
+    const batchId = req.params.batchId
+    const todaysData = await User.find({
+        ofBranch: batchId
+    }).select("_id presentyData name ").populate({
+        path: "presentyData",
+        select: "lastMarkedPresenty"
+    })
+
+
+    let presentTeacher = [];
+    let notMarkedTeachers = [];
+
+
+    let d = new Date();
+    todaysData.map(el => {
+        if (el?.presentyData?.lastMarkedPresenty == `${d.getDate()}-${d.getMonth()}`) {
+            presentTeacher.push({ name: el.name })
+        } else {
+            notMarkedTeachers.push({ name: el.name })
+        }
+    })
+
+
+    res.status(200).send({
+        status: "success",
+        data: {
+            presentTeacher, notMarkedTeachers
+        }
+    })
+})
+
+
+
+
+exports.getAllStudentsBatchesName = catchAsync(async (req, res, next) => {
+
+    const batches = await Batch.find({ isOf: "STUDENT" }).select("_id batchName");
+
+
+
+    res.status(200).send({
+        status: "success",
+        batches
+    })
+
+
+
+})
+
+
+
+
+exports.getAllStudentListByBatchId = catchAsync(async (req, res, next) => {
+
+    const batchId = req.params.batchId;
+    if (!batchId) {
+        return next(new appError("please pass batch id ", 400))
+    }
+    const studentList = await Batch.findById(batchId).select("_id student").populate({
+        path: "student",
+        select: "name "
+    })
+
+    res.status(200).send({
+        status: "success",
+        studentList
+    })
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+// COURSES
+
+
+
+exports.createCourse = catchAsync(async (req, res, next) => {
+    const { name, price, description, category } = req.body;
+    if (!name || !price || !description || !category) {
+        return next(new appError("please provide all the fields ", 400))
+    }
+
+    if (category !== "BEGINNER" || category !== "INTERMEDIATE" || category !== "ADVANCE") {
+        return next(new appError("please enter valid course category", 400))
+
+    }
+    const course = await Course.create({
+        name, price, description, category
+    })
+
+    if (!course) {
+        return next(new appError("failed to create course please try again", 400))
+    }
+
+    res.status(201).send({
+        status: "success",
+        message: "course created successfully"
+    })
+
+
+})
+
+exports.getAllcourses = catchAsync(async (req, res, next) => {
+
+    const allCourses = await Course.find({})
+    res.status(200).send({
+        status: "success",
+        allCourses
+    })
+})
+
+
+
+
+exports.createHomework = catchAsync(async (req, res, next) => {
+
+    const { category, title, description } = req.body;
+    if (!category || !title || !description) {
+        return next(new appError("please enter all the fields", 400))
+    }
+
+    let media = []
+    if (req?.body?.Files.length > 0) {
+
+
+
+        let obj = req.body.Files.map((el, i) => {
+            console.log(el);
+            try {
+                let m = cloudinary.v2.uploader.upload(`./public/homework/${el}`, {
+
+                    folder: 'homework', // Save files in a folder named 
+
+                });
+                return m
+            } catch (error) {
+                console.log("ERR", error);
+            }
+        })
+
+        obj = await Promise.all(obj)
+        // console.log(obj);
+        obj.length > 0 && obj.map(el => {
+            media.push(el.secure_url)
+        })
+
+        obj.length > 0 && req.body.Files.map((el, i) => {
+            fs.unlink(`./public/homework/${el}`, (err) => {
+                if (err) {
+                    console.log("err in del");
+                }
+                // console.log("Del");
+            })
+        })
+
+
+
+    }
+
+
+    if (category !== "BEGINNER" || category !== "INTERMEDIATE" || category !== "ADVANCE") {
+        return next(new appError("please enter valid course category", 400))
+
+    }
+
+    const hw = await Homework.create({
+        media,
+        description,
+        category,
+        createdBy: req.user._id
+
+    })
+
+    if (!hw) {
+        return next(new appError("homework not created please try again", 400))
+
+    }
+
+    res.status(200).send({
+        status: "success",
+        msg: `homework posted for category : ${category}`
+    })
+
+
+})
+
+
+
+exports.unsubscribeStudentToCourse = catchAsync(async (req, res, next) => {
+    const {
+        courseId,
+        studentId
+
+    } = req.body;
+
+    if (!courseId || !studentId) {
+        return next(new appError("please pass all the fields ", 400))
+    }
+
+    const student = await User.findByIdAndUpdate(studentId, {
+        courseData: ""
+    }, {
+        new: true
+    })
+
+    if (!student) {
+        return next(new appError("course not added for student please try again", 400))
+    }
+
+
+    const course = await Course.findByIdAndUpdate(courseId, {
+        $push: { student: student._id }
+    }, {
+        new: true
+    })
+
+    if (!course) {
+
+        return next(new appError("something went wrong please try again"))
+    }
+
+    res.status(200).send({
+        status: "success",
+        msg: "course unsubsribed for student  "
+    })
+
+
+
+
+
+
+
+
+})
+
+exports.subscribeStudentToCourse = catchAsync(async (req, res, next) => {
+    const {
+        courseId,
+        studentId
+
+    } = req.body;
+
+    if (!courseId || !studentId) {
+        return next(new appError("please pass all the fields ", 400))
+    }
+
+    const student = await User.findByIdAndUpdate(studentId, {
+        courseData: courseId
+    }, {
+        new: true
+    })
+
+    if (!student) {
+        return next(new appError("course not added for student please try again", 400))
+    }
+
+
+    const course = await Course.findByIdAndUpdate(courseId, {
+        $push: { student: student._id }
+    }, {
+        new: true
+    })
+
+    if (!course) {
+
+        return next(new appError("something went wrong please try again"))
+    }
+
+    res.status(200).send({
+        status: "success",
+        msg: "course assigned to student "
+    })
+
+
+
+
+
+
+
+
+})
+
+
+exports.getAllStudentsOfCourse = catchAsync(async (req, res, next) => {
+    const courseId = req.params.coursId;
+    if (!courseId) {
+        return next(new appError("please provide id ", 400))
+    }
+    const allStudent = await Course.findById(courseId).populate({
+        path: "student",
+        select: "name "
+    })
+    res.status(200).send({
+        status: "success",
+        allStudent
+    })
+})
+
+
+
+
+
+
+
+
+// Leaves
+exports.actionOnLeave = catchAsync(async (req, res, next) => {
+
+    const { approve, leaveId, teacherId, message } = req.body;
+
+    if (!leaveId || !teacherId) {
+        return next(new appError("please provide all the details", 400))
+    }
+    const leave = await Leave.findByIdAndUpdate(leaveId, {
+        approve
+    }, {
+        new: true
+    })
+
+    if (!leave) {
+        return next(new appError("please try again to approve status of leave", 400))
+    }
+
+    const Notification = await Notify.create({
+        to: teacherId,
+        message: message
+    })
+    if (!Notification) {
+        return next(new appError("notification not created for teacher please try again", 400))
+    }
+
+
+
+    res.status(200).send({
+        status: "success",
+        msg: "notification sent for teacher"
+    })
+})
 
 

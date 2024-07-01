@@ -8,6 +8,7 @@ const sharp = require("sharp");
 
 const fs = require('fs');
 const Notify = require("../Models/Notify");
+const Leave = require("../Models/Leaves");
 
 
 const multerStorage = multer.memoryStorage();
@@ -377,6 +378,32 @@ exports.getAllMyNotification = catchAsync(async (req, res, next) => {
 
 
 
+})
+
+exports.requestForLeave = catchAsync(async (req, res, next) => {
+
+    const { reason, dateOfthisMonth } = req.body;
+
+    if (!reason || !dateOfthisMonth) {
+        return next(new appError("please provide all the details", 400))
+    }
+    let d = new Date()
+
+    if (dateOfthisMonth < d.getDate()) {
+        return next(new appError("please provide future date ", 400))
+    }
+
+    await Leave.create({
+        reason,
+        onDate: dateOfthisMonth
+    })
+
+
+
+    res.status(200).send({
+        status: "success",
+        msg: "admin will approve your leave please wait "
+    })
 })
 
 
