@@ -23,6 +23,11 @@ const paymentSchema = mongoose.Schema({
     courseAssignedId: {
         type: mongoose.mongo.ObjectId,
         ref: "course"
+    },
+    paymentImage: {
+        type: String,
+        required: [true, "payment must have a screenshort"]
+
     }
 
 })

@@ -1,5 +1,5 @@
 const express = require('express');
-const { createTeachersBatch, createTeacher, markTodayAsHoliday, todaysEvent, getAllEvent, uploadEventImages, resizeEventImage, createStudent, createStudentsBatch, createHomework, resizeHomeworkFiles, uploadHomeworkFiles, markStudentsPresenty, getAllTeachers, getAllBatches, getBatchById, getAllBatchesName, updateteacher, deleteTeacher, getPresentyDataOfTeacherbyMonth, createNotificationForTeacher, createNotificationForBatch, getTeacherById, getDashboardInfo, getPresentyStatusForToday, getAllStudentsBatchesName, getAllStudentListByBatchId, createCourse, getAllcourses, subscribeStudentToCourse, unsubscribeStudentToCourse, getAllStudentsOfCourse, actionOnLeave } = require('../Controllers/adminController');
+const { createTeachersBatch, createTeacher, markTodayAsHoliday, todaysEvent, getAllEvent, uploadEventImages, resizeEventImage, createStudent, createStudentsBatch, createHomework, resizeHomeworkFiles, uploadHomeworkFiles, markStudentsPresenty, getAllTeachers, getAllBatches, getBatchById, getAllBatchesName, updateteacher, deleteTeacher, getPresentyDataOfTeacherbyMonth, createNotificationForTeacher, createNotificationForBatch, getTeacherById, getDashboardInfo, getPresentyStatusForToday, getAllStudentsBatchesName, getAllStudentListByBatchId, createCourse, getAllcourses, subscribeStudentToCourse, unsubscribeStudentToCourse, getAllStudentsOfCourse, actionOnLeave, listOfLeaves, uploadQrForPayments, uploadQrImage } = require('../Controllers/adminController');
 const { isLoggedIn } = require('../Middleware/isLoggedIn');
 const { giveAccessTo } = require('../Middleware/giveAccessTo');
 
@@ -11,15 +11,17 @@ adminRouter.use(isLoggedIn, giveAccessTo("ADMIN"))
 
 
 adminRouter.post("/createTeachersbatch", createTeachersBatch) //done
+adminRouter.post("/createTeachers", createTeacher) // done
+
+
 adminRouter.get("/getAllBatches", getAllBatches)  //done
 adminRouter.get("/getAllBatchNames", getAllBatchesName) //done
-
 adminRouter.get("/getBatch/:batchId", getBatchById) //done
+
 
 adminRouter.get("/getPresentyData/:teacherId/:month", getPresentyDataOfTeacherbyMonth) //done
 adminRouter.get("/getDataOfTeacher/:teacherId", getTeacherById) //done
 
-adminRouter.post("/createTeachers", createTeacher) // done
 adminRouter.patch("/updateTeacher", updateteacher) // done
 adminRouter.delete("/deleteTeacher", deleteTeacher) // done
 adminRouter.get("/getAllTeachers/:branchId", getAllTeachers) //done
@@ -47,13 +49,14 @@ adminRouter.get("/getAllStudentsList/:batchId", getAllStudentListByBatchId) //do
 
 adminRouter.post("/markTodaysStudentPresenty", markStudentsPresenty)  // done
 
-adminRouter.post("/createStudent", createStudent)
+adminRouter.post("/createStudent", createStudent)  //done
 adminRouter.post("/createHomework", uploadHomeworkFiles, resizeHomeworkFiles, createHomework)
 
 // adminRouter.post("/createStudent",)
 
 
 //leave 
+adminRouter.get("/listOfPendingLeaves", listOfLeaves)
 adminRouter.post("/actionOnPendingLeaves", actionOnLeave)
 
 // courses
@@ -62,6 +65,11 @@ adminRouter.get("/getAllcourses", getAllcourses)
 adminRouter.get("/getAllCourseStudent/:courseId", getAllStudentsOfCourse)
 adminRouter.post("/subscribeStudentToCourse", subscribeStudentToCourse)
 adminRouter.post("/terminateSubscriptionForStudent", unsubscribeStudentToCourse)
+
+
+
+// qr 
+adminRouter.post("/uploadQrForPayment", uploadQrImage, uploadQrForPayments)
 
 
 module.exports = adminRouter;

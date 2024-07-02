@@ -8,16 +8,21 @@ const leaveSchema = mongoose.Schema({
         maxLength: [400, "please describe it in less words"]
     },
     approve: {
-        type: Boolean,
-        default: false
+        type: String,
+        default: "NOACTON",
+        enum: ["NOACTON", "APPROVED", "NOTAPPROVED"]
     },
     submittedOn: {
         type: Date,
         default: Date.now()
     },
     onDate: {
-        type: String,
+        type: Date,
         required: [true, "must provide date "]
+    },
+    createdBy: {
+        type: mongoose.mongo.ObjectId,
+        ref: "user"
     }
 })
 

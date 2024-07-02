@@ -4,7 +4,7 @@ const homeworkSchema = mongoose.Schema({
 
     description: {
         type: String,
-        // required: [true, "must provide description for homework"]
+        required: [true, "must provide description for homework"]
     },
     media: {
         type: [String]
@@ -16,7 +16,7 @@ const homeworkSchema = mongoose.Schema({
     category: {
         type: String,
         enum: ["BEGINNER", "INTERMEDIATE", "ADVANCE"],
-        // required: [true, "must provide for which group it is created for"]
+        required: [true, "must provide for which group it is created for"]
     },
     createdBy: {
         type: mongoose.mongo.ObjectId,

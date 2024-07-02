@@ -387,15 +387,16 @@ exports.requestForLeave = catchAsync(async (req, res, next) => {
     if (!reason || !dateOfthisMonth) {
         return next(new appError("please provide all the details", 400))
     }
-    let d = new Date()
+    // let d = new Date()
 
-    if (dateOfthisMonth < d.getDate()) {
-        return next(new appError("please provide future date ", 400))
-    }
+    // if (dateOfthisMonth < d.getDate()) {
+    //     return next(new appError("please provide future date ", 400))
+    // }
 
     await Leave.create({
         reason,
-        onDate: dateOfthisMonth
+        onDate: dateOfthisMonth,
+        createdBy: req.user._id
     })
 
 
