@@ -1,5 +1,5 @@
 const express = require('express');
-const { createTeachersBatch, createTeacher, markTodayAsHoliday, todaysEvent, getAllEvent, uploadEventImages, resizeEventImage, createStudent, createStudentsBatch, createHomework, resizeHomeworkFiles, uploadHomeworkFiles, markStudentsPresenty, getAllTeachers, getAllBatches, getBatchById, getAllBatchesName, updateteacher, deleteTeacher, getPresentyDataOfTeacherbyMonth, createNotificationForTeacher, createNotificationForBatch, getTeacherById, getDashboardInfo, getPresentyStatusForToday, getAllStudentsBatchesName, getAllStudentListByBatchId, createCourse, getAllcourses, subscribeStudentToCourse, unsubscribeStudentToCourse, getAllStudentsOfCourse, actionOnLeave, listOfLeaves, uploadQrForPayments, uploadQrImage } = require('../Controllers/adminController');
+const { createTeachersBatch, createTeacher, markTodayAsHoliday, todaysEvent, getAllEvent, uploadEventImages, resizeEventImage, createStudent, createStudentsBatch, createHomework, resizeHomeworkFiles, uploadHomeworkFiles, markStudentsPresenty, getAllTeachers, getAllBatches, getBatchById, getAllBatchesName, updateteacher, deleteTeacher, getPresentyDataOfTeacherbyMonth, createNotificationForTeacher, createNotificationForBatch, getTeacherById, getDashboardInfo, getPresentyStatusForToday, getAllStudentsBatchesName, getAllStudentListByBatchId, createCourse, getAllcourses, subscribeStudentToCourse, unsubscribeStudentToCourse, getAllStudentsOfCourse, actionOnLeave, listOfLeaves, uploadQrForPayments, uploadQrImage, getAllPendingSubscription } = require('../Controllers/adminController');
 const { isLoggedIn } = require('../Middleware/isLoggedIn');
 const { giveAccessTo } = require('../Middleware/giveAccessTo');
 
@@ -34,12 +34,12 @@ adminRouter.post("/createNotification/teacher/:teacherId", createNotificationFor
 adminRouter.post("/createNotification/batch/:batchId", createNotificationForBatch)  //done
 
 
-adminRouter.post("/markDateAsHoliday", markTodayAsHoliday)
+adminRouter.post("/markDateAsHoliday", markTodayAsHoliday) // done
 
 
 
 
-adminRouter.post("/todaysEvent", uploadEventImages, resizeEventImage, todaysEvent)
+adminRouter.post("/todaysEvent", uploadEventImages, resizeEventImage, todaysEvent)  // done
 
 
 
@@ -50,26 +50,31 @@ adminRouter.get("/getAllStudentsList/:batchId", getAllStudentListByBatchId) //do
 adminRouter.post("/markTodaysStudentPresenty", markStudentsPresenty)  // done
 
 adminRouter.post("/createStudent", createStudent)  //done
-adminRouter.post("/createHomework", uploadHomeworkFiles, resizeHomeworkFiles, createHomework)
+adminRouter.post("/createHomework", uploadHomeworkFiles, resizeHomeworkFiles, createHomework) // done
 
 // adminRouter.post("/createStudent",)
 
 
 //leave 
-adminRouter.get("/listOfPendingLeaves", listOfLeaves)
-adminRouter.post("/actionOnPendingLeaves", actionOnLeave)
+adminRouter.get("/listOfPendingLeaves", listOfLeaves)  // done
+adminRouter.post("/actionOnPendingLeaves", actionOnLeave) // done
+
+// payments
+
+
 
 // courses
-adminRouter.post("/createCourses", createCourse)
-adminRouter.get("/getAllcourses", getAllcourses)
-adminRouter.get("/getAllCourseStudent/:courseId", getAllStudentsOfCourse)
-adminRouter.post("/subscribeStudentToCourse", subscribeStudentToCourse)
+adminRouter.post("/createCourses", createCourse) // done
+adminRouter.get("/getAllcourses", getAllcourses) // done
+adminRouter.get("/getAllPendingSubscription", getAllPendingSubscription) // done
+adminRouter.get("/getAllCourseStudent/:courseId", getAllStudentsOfCourse) // done
+adminRouter.post("/subscribeStudentToCourse/:paymentId", subscribeStudentToCourse)  // done
 adminRouter.post("/terminateSubscriptionForStudent", unsubscribeStudentToCourse)
 
 
 
 // qr 
-adminRouter.post("/uploadQrForPayment", uploadQrImage, uploadQrForPayments)
+adminRouter.post("/uploadQrForPayment", uploadQrImage, uploadQrForPayments) //done
 
 
 module.exports = adminRouter;

@@ -6,6 +6,9 @@ const appError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 
 
+const sharp = require("sharp");
+const cloudinary = require('cloudinary');
+const fs = require("fs")
 
 
 const multerStorage = multer.memoryStorage();
@@ -132,6 +135,19 @@ exports.buyCourse = catchAsync(async (req, res, next) => {
         status: "success",
         msg: "buyed this course , you will get access to course in few hours"
     })
+})
+
+
+exports.getAllCourses = catchAsync(async (req, res, next) => {
+    const courses = await Course.find({})
+
+
+    res.status(200).send(
+        {
+            status: "success",
+            courses
+        }
+    )
 })
 
 

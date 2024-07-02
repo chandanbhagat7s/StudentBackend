@@ -14,6 +14,7 @@ const Course = require("../Models/Course");
 const Homework = require("../Models/Homework");
 const Notify = require("../Models/Notify");
 const Leave = require("../Models/Leaves");
+const Payment = require("../Models/Payments");
 
 
 
@@ -1107,7 +1108,7 @@ exports.createCourse = catchAsync(async (req, res, next) => {
         return next(new appError("please provide all the fields ", 400))
     }
 
-    if (category !== "BEGINNER" || category !== "INTERMEDIATE" || category !== "ADVANCE") {
+    if (category !== "BEGINNER" && category !== "INTERMEDIATE" && category !== "ADVANCE") {
         return next(new appError("please enter valid course category", 400))
 
     }
@@ -1133,6 +1134,19 @@ exports.getAllcourses = catchAsync(async (req, res, next) => {
     res.status(200).send({
         status: "success",
         allCourses
+    })
+})
+
+
+
+exports.getAllPendingSubscription = catchAsync(async (req, res, next) => {
+
+    const allPayments = await Payment.find({
+        assigned: false
+    })
+    res.status(200).send({
+        status: "success",
+        allPayments
     })
 })
 
@@ -1190,17 +1204,23 @@ exports.unsubscribeStudentToCourse = catchAsync(async (req, res, next) => {
 
 exports.subscribeStudentToCourse = catchAsync(async (req, res, next) => {
     const {
-        courseId,
-        studentId
+        paymentId
 
-    } = req.body;
+    } = req.params;
 
-    if (!courseId || !studentId) {
+    if (!paymentId) {
         return next(new appError("please pass all the fields ", 400))
     }
 
-    const student = await User.findByIdAndUpdate(studentId, {
-        courseData: courseId
+
+    const payment = await Payment.findById(paymentId)
+
+    if (!payment) {
+        return next(new appError("payment not exist  ", 400))
+    }
+
+    const student = await User.findByIdAndUpdate(payment.paymentBy, {
+        courseData: payment.courseId
     }, {
         new: true
     })
@@ -1210,8 +1230,8 @@ exports.subscribeStudentToCourse = catchAsync(async (req, res, next) => {
     }
 
 
-    const course = await Course.findByIdAndUpdate(courseId, {
-        $push: { student: student._id }
+    const course = await Course.findByIdAndUpdate(payment.courseId, {
+        $push: { students: student._id }
     }, {
         new: true
     })
@@ -1221,6 +1241,10 @@ exports.subscribeStudentToCourse = catchAsync(async (req, res, next) => {
         return next(new appError("something went wrong please try again"))
     }
 
+    await Payment.findByIdAndUpdate(paymentId, {
+        assigned: true
+    })
+
     res.status(200).send({
         status: "success",
         msg: "course assigned to student "
@@ -1229,20 +1253,16 @@ exports.subscribeStudentToCourse = catchAsync(async (req, res, next) => {
 
 
 
-
-
-
-
 })
 
 
 exports.getAllStudentsOfCourse = catchAsync(async (req, res, next) => {
-    const courseId = req.params.coursId;
+    const courseId = req.params.courseId;
     if (!courseId) {
         return next(new appError("please provide id ", 400))
     }
     const allStudent = await Course.findById(courseId).populate({
-        path: "student",
+        path: "students",
         select: "name "
     })
     res.status(200).send({
