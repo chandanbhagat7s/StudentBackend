@@ -29,6 +29,8 @@ adminRouter.get("/getAllTeachers/:branchId", getAllTeachers) //done
 adminRouter.get("/getDashboardInfo", getDashboardInfo)
 adminRouter.get("/getTodaysPresentyData/:batchId", getPresentyStatusForToday)
 
+adminRouter.get("/getAllTodaysTask/:batchId",)
+
 
 adminRouter.post("/createNotification/teacher/:teacherId", createNotificationForTeacher) //done
 adminRouter.post("/createNotification/batch/:batchId", createNotificationForBatch)  //done

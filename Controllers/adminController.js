@@ -931,12 +931,26 @@ exports.getDashboardInfo = catchAsync(async (req, res, next) => {
 
 
 exports.getPresentyStatusForToday = catchAsync(async (req, res, next) => {
+    let d = new Date();
+    const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",];
     const batchId = req.params.batchId
     const todaysData = await User.find({
         ofBranch: batchId
     }).select("_id presentyData name ").populate({
         path: "presentyData",
-        select: "lastMarkedPresenty"
+        select: `lastMarkedPresenty ${monthNames[d.getMonth()]}`
     })
 
 
@@ -944,10 +958,14 @@ exports.getPresentyStatusForToday = catchAsync(async (req, res, next) => {
     let notMarkedTeachers = [];
 
 
-    let d = new Date();
     todaysData.map(el => {
         if (el?.presentyData?.lastMarkedPresenty == `${d.getDate()}-${d.getMonth()}`) {
-            presentTeacher.push({ name: el.name })
+
+            let datato = el.presentyData[monthNames[d.getMonth()]]
+
+            td = datato.filter(el => el.date == d.getDate())
+            let task = td[0]?.description ? td[0].description : "task not submitted"
+            presentTeacher.push({ name: el.name, task: task })
         } else {
             notMarkedTeachers.push({ name: el.name })
         }
