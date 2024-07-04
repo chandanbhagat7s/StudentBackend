@@ -19,6 +19,7 @@ const cookieParser = require('cookie-parser');
 
 const cloudinary = require('cloudinary');
 const studentRouter = require('./Routes/studentRoute');
+const path = require('path');
 const app = express()
 env.config({ path: "./config.env" })
 
@@ -29,6 +30,8 @@ app.use(cookieParser())
 app.use(express.json())
 app.use(morgan("dev"))
 app.use(compression())
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 const corsOptions = {
     origin: "*", // Allow all origins
