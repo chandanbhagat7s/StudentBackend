@@ -320,6 +320,28 @@ exports.getAllTeachers = catchAsync(async (req, res, next) => {
 
 })
 
+exports.getAllTeachersShortInfo = catchAsync(async (req, res, next) => {
+
+    const id = req.params.branchId;
+    if (!id) {
+        return next(new appError("please provide id", 400))
+    }
+    const allTeachersData = await User.find({
+        ofBranch: id
+    }).select("name _id ")
+
+
+    res.status(200).send({
+        status: "success",
+        allTeachersData
+    })
+
+
+})
+
+
+
+
 exports.updateteacher = catchAsync(async (req, res, next) => {
     const {
         address,

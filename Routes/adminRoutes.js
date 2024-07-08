@@ -1,5 +1,5 @@
 const express = require('express');
-const { createTeachersBatch, createTeacher, markTodayAsHoliday, todaysEvent, getAllEvent, uploadEventImages, resizeEventImage, createStudent, createStudentsBatch, createHomework, resizeHomeworkFiles, uploadHomeworkFiles, markStudentsPresenty, getAllTeachers, getAllBatches, getBatchById, getAllBatchesName, updateteacher, deleteTeacher, getPresentyDataOfTeacherbyMonth, createNotificationForTeacher, createNotificationForBatch, getTeacherById, getDashboardInfo, getPresentyStatusForToday, getAllStudentsBatchesName, getAllStudentListByBatchId, createCourse, getAllcourses, subscribeStudentToCourse, unsubscribeStudentToCourse, getAllStudentsOfCourse, actionOnLeave, listOfLeaves, uploadQrForPayments, uploadQrImage, getAllPendingSubscription } = require('../Controllers/adminController');
+const { createTeachersBatch, createTeacher, markTodayAsHoliday, todaysEvent, getAllEvent, uploadEventImages, resizeEventImage, createStudent, createStudentsBatch, createHomework, resizeHomeworkFiles, uploadHomeworkFiles, markStudentsPresenty, getAllTeachers, getAllBatches, getBatchById, getAllBatchesName, updateteacher, deleteTeacher, getPresentyDataOfTeacherbyMonth, createNotificationForTeacher, createNotificationForBatch, getTeacherById, getDashboardInfo, getPresentyStatusForToday, getAllStudentsBatchesName, getAllStudentListByBatchId, createCourse, getAllcourses, subscribeStudentToCourse, unsubscribeStudentToCourse, getAllStudentsOfCourse, actionOnLeave, listOfLeaves, uploadQrForPayments, uploadQrImage, getAllPendingSubscription, getAllTeachersShortInfo } = require('../Controllers/adminController');
 const { isLoggedIn } = require('../Middleware/isLoggedIn');
 const { giveAccessTo } = require('../Middleware/giveAccessTo');
 
@@ -25,11 +25,12 @@ adminRouter.get("/getDataOfTeacher/:teacherId", getTeacherById) //done
 adminRouter.patch("/updateTeacher", updateteacher) // done
 adminRouter.delete("/deleteTeacher", deleteTeacher) // done
 adminRouter.get("/getAllTeachers/:branchId", getAllTeachers) //done
+adminRouter.get("/getAllTeachersShortInfo/:branchId", getAllTeachersShortInfo) //done
 
 adminRouter.get("/getDashboardInfo", getDashboardInfo)
 adminRouter.get("/getTodaysPresentyData/:batchId", getPresentyStatusForToday)
 
-adminRouter.get("/getAllTodaysTask/:batchId",)
+// adminRouter.get("/getAllTodaysTask/:batchId",)
 
 
 adminRouter.post("/createNotification/teacher/:teacherId", createNotificationForTeacher) //done
