@@ -387,10 +387,10 @@ exports.updateteacher = catchAsync(async (req, res, next) => {
 exports.deleteTeacher = catchAsync(async (req, res, next) => {
     const {
 
-        email
-    } = req.body;
+        teacherId
+    } = req.params;
 
-    if (!email) {
+    if (!teacherId) {
         return next(new appError("please provide teachers details to delete", 400))
     }
 
@@ -398,9 +398,7 @@ exports.deleteTeacher = catchAsync(async (req, res, next) => {
 
 
 
-    const teacher = await User.findOne({
-        email
-    })
+    const teacher = await User.findById(teacherId)
 
 
 

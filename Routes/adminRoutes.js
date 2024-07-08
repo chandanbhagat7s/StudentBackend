@@ -23,7 +23,7 @@ adminRouter.get("/getPresentyData/:teacherId/:month", getPresentyDataOfTeacherby
 adminRouter.get("/getDataOfTeacher/:teacherId", getTeacherById) //done
 
 adminRouter.patch("/updateTeacher", updateteacher) // done
-adminRouter.delete("/deleteTeacher", deleteTeacher) // done
+adminRouter.delete("/deleteTeacher/:teacherId", deleteTeacher) // done
 adminRouter.get("/getAllTeachers/:branchId", getAllTeachers) //done
 adminRouter.get("/getAllTeachersShortInfo/:branchId", getAllTeachersShortInfo) //done
 
