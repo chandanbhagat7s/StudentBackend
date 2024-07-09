@@ -1375,19 +1375,19 @@ exports.listOfLeaves = catchAsync(async (req, res, next) => {
 exports.uploadQrForPayments = catchAsync(async (req, res, next) => {
 
 
-    fs.unlink(`./public/Qr/qrImage.jpg`, (err) => {
+
+
+    if (!req.file) {
+        return next(new appError("please provide image to upload ", 400))
+    }
+    fs.unlink(`public/images/Qr/qrImage.jpg`, (err) => {
         if (err) {
             console.log("err in del");
         }
 
     })
 
-    if (!req.file) {
-        return next(new appError("please provide image to upload ", 400))
-    }
-
-
-    await sharp(req.file.buffer).toFormat('jpeg').toFile(`public/Qr/qrImage.jpg`)
+    await sharp(req.file.buffer).toFormat('jpeg').toFile(`public/images/Qr/qrImage.jpg`)
 
 
 
