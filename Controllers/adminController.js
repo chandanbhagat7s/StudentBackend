@@ -582,7 +582,6 @@ exports.createStudent = catchAsync(async (req, res, next) => {
     const batch = await Batch.findOne({
         batchName
     })
-    console.log(typeof batch, batch);
 
 
 
@@ -734,15 +733,18 @@ exports.markStudentsPresenty = catchAsync(async (req, res, next) => {
 
     }
     const thisMonthName = monthNames[today.month]
-    console.log(thisMonthName);
+    console.log(thisMonthName, req.body.data.students);
     const filter = { of: { $in: req.body.data.students } };
+    const e = await User.find({ _id: { $in: req.body.data.students } })
+    console.log(e);
 
     const update = { $push: { [thisMonthName]: todaysObj } }
 
     const updatedStatus = await Presenty.updateMany(filter,
         update
     )
-    if (updatedStatus.modifiedCount == req?.body?.data?.students?.length) {
+    console.log(updatedStatus);
+    if (updatedStatus.modifiedCount == req?.body?.data?.students?.length || updatedStatus.modifiedCount == updatedStatus.matchedCount) {
         res.status(200).send({
             status: "success",
             msg: "presenty marked for all the selected student"

@@ -27,8 +27,6 @@ const multerFilter = (req, file, cb) => {
 }
 
 exports.resizeImage = catchAsync(async (req, res, next) => {
-    console.log("type is ", req.body);
-    console.log("file is ", req.file);
     if (!req.file) {
         return next(new appError("please upload a file", 400))
     }
@@ -93,6 +91,28 @@ const uploads = multer(
 )
 
 exports.uploadImages = uploads.single('image')
+
+exports.uploadLeaveImages = uploads.single('doc')
+
+
+exports.resizeLeaveImage = catchAsync(async (req, res, next) => {
+    if (!req?.file) {
+
+        return next()
+    }
+
+    // leave image
+    req.body.doc = `${req?.user?._id}-leave.jpg`
+    await sharp(req.file.buffer).toFormat('jpeg').toFile(`public/user/${req.body.doc}`)
+
+
+
+
+
+    next()
+
+
+})
 
 
 
@@ -217,6 +237,15 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
 
 
 })
+
+
+
+
+
+
+
+
+
 
 exports.submitTodaysTask = catchAsync(async (req, res, next) => {
 
@@ -384,6 +413,14 @@ exports.requestForLeave = catchAsync(async (req, res, next) => {
 
     const { reason, dateOfthisMonth } = req.body;
 
+
+
+
+
+
+
+
+
     if (!reason || !dateOfthisMonth) {
         return next(new appError("please provide all the details", 400))
     }
@@ -393,10 +430,18 @@ exports.requestForLeave = catchAsync(async (req, res, next) => {
     //     return next(new appError("please provide future date ", 400))
     // }
 
+    let result;
+    if (req?.body?.doc) {
+        result = await cloudinary.v2.uploader.upload(`public/user/${req.body.doc}`, {
+            folder: 'leave',
+        });
+    }
+
     await Leave.create({
         reason,
         onDate: dateOfthisMonth,
-        createdBy: req.user._id
+        createdBy: req.user._id,
+        doc: req?.body?.doc ? result.secure_url : "no documents attached"
     })
 
 

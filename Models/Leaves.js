@@ -23,6 +23,10 @@ const leaveSchema = mongoose.Schema({
     createdBy: {
         type: mongoose.mongo.ObjectId,
         ref: "user"
+    },
+    doc: {
+        type: String,
+
     }
 })
 

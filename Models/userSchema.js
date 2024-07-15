@@ -73,6 +73,13 @@ const userSchema = new mongoose.Schema({
         type: mongoose.mongo.ObjectId,
         ref: "course"
     },
+    buyedAt: {
+        type: Date,
+
+    },
+    expiresOn: {
+        type: Date
+    },
     pass: {
         type: String,
 

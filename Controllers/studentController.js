@@ -8,7 +8,8 @@ const catchAsync = require("../utils/catchAsync");
 
 const sharp = require("sharp");
 const cloudinary = require('cloudinary');
-const fs = require("fs")
+const fs = require("fs");
+const User = require("../Models/userSchema");
 
 
 const multerStorage = multer.memoryStorage();
@@ -124,6 +125,10 @@ exports.buyCourse = catchAsync(async (req, res, next) => {
         })
         return next(new appError("payment details not submitted please try again"))
     }
+
+    // const user = await User.findByIdAndUpdate(req.user._id,{
+    //     buyedAt : 
+    // })
 
 
     fs.unlink(`public/ScreenShortPayment/${req.body.image}`, (err) => {
