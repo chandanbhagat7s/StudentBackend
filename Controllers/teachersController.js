@@ -191,7 +191,7 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
             date: today.date,
             photo: result.secure_url,
             status: "present",
-            halfDay: true
+            halfDay: true,
 
         }
     } else {
@@ -199,6 +199,7 @@ exports.markPresenty = catchAsync(async (req, res, next) => {
             date: today.date,
             photo: result.secure_url,
             status: "present",
+            time: req?.body?.time || "not filled"
 
         }
     }

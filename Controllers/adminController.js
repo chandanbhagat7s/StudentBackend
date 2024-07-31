@@ -987,7 +987,7 @@ exports.getPresentyStatusForToday = catchAsync(async (req, res, next) => {
 
             td = datato.filter(el => el.date == d.getDate())
             let task = td[0]?.description ? td[0].description : "task not submitted"
-            presentTeacher.push({ name: el.name, task: task })
+            presentTeacher.push({ name: el.name, task: task, time: el?.time || "not found" })
         } else {
             notMarkedTeachers.push({ name: el.name })
         }
